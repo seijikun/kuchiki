@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io::{Write, Result};
+use std::io::{self, Write, Result};
 use std::path::Path;
 use std::string::ToString;
 use html5ever::QualName;
@@ -91,5 +91,16 @@ impl NodeRef {
     pub fn serialize_to_file<P: AsRef<Path>>(&self, path: P) -> Result<()>{
         let mut file = File::create(&path)?;
         self.serialize(&mut file)
+    }
+
+    /// Get the inner HTML code.
+    #[inline]
+    pub fn inner_html(&self) -> Result<String> {
+        let mut u8_vec = Vec::new();
+        serialize(&mut u8_vec, self, SerializeOpts {
+            traversal_scope: ChildrenOnly(None),
+            ..Default::default()
+        })?;
+        String::from_utf8(u8_vec).map_err(|err| io::Error::new(io::ErrorKind::InvalidData, err))
     }
 }
